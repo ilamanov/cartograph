@@ -1,0 +1,11 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cartograph logomark — topographic contour "C" with peak marker -->
+  <!-- Outer contour -->
+  <path d="M25 7A13 13 0 1 0 25 25" stroke="#c8a750" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+  <!-- Middle contour -->
+  <path d="M22.5 9.5A9.5 9.5 0 1 0 22.5 23" stroke="#c8a750" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <!-- Inner contour -->
+  <path d="M19.5 12A6 6 0 1 0 19.5 20.5" stroke="#c8a750" stroke-width="1.2" stroke-linecap="round" opacity="0.75"/>
+  <!-- Peak marker -->
+  <circle cx="15" cy="16" r="2" fill="#c8a750" opacity="0.9"/>
+</svg>
