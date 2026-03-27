@@ -7,6 +7,7 @@ This is the contract between the extraction skill and the visualizer. Output mus
 ```json
 {
   "meta": { ... },
+  "techStack": [ ... ],
   "surfaces": [ ... ],
   "features": [ ... ],
   "entities": [ ... ],
@@ -34,6 +35,51 @@ This is the contract between the extraction skill and the visualizer. Output mus
 - `analyzedAt` — ISO 8601 timestamp
 - `version` — schema version, always `"0.1.0"` for V0
 - `rootDir` — root directory analyzed (usually `"."`)
+
+## `techStack[]`
+
+Detected technologies, frameworks, and libraries used by the project. Each entry represents a single technology with its category, version (when detectable), and source of detection. This key is **optional for backwards compatibility**; when absent, the visualizer should show a graceful "No tech stack data" state.
+
+```json
+{
+  "id": "nextjs",
+  "name": "Next.js",
+  "version": "14.2.0",
+  "category": "framework",
+  "description": "React framework for server-rendered applications",
+  "source": "package.json",
+  "confidence": "high"
+}
+```
+
+- `id` — unique kebab-case identifier
+- `name` — human-readable technology name (e.g., `"Next.js"`, `"Tailwind CSS"`, `"Prisma"`)
+- `version` — detected version string, or `null` if version cannot be determined
+- `category` — one of:
+  - `"language"` — programming language (TypeScript, JavaScript)
+  - `"framework"` — application framework (Next.js, React, Vue, Express, Fastify)
+  - `"styling"` — CSS/styling solution (Tailwind CSS, CSS Modules, styled-components, Sass)
+  - `"database"` — database or ORM (Prisma, Drizzle, MongoDB, PostgreSQL, Supabase)
+  - `"auth"` — authentication provider (Clerk, NextAuth, Auth0, Firebase Auth)
+  - `"api"` — API layer or protocol (tRPC, GraphQL, REST, gRPC)
+  - `"testing"` — testing tools (Jest, Vitest, Playwright, Cypress)
+  - `"deployment"` — hosting/deployment platform (Vercel, AWS, Docker, Cloudflare)
+  - `"ai"` — AI/ML services or SDKs (OpenAI, Anthropic, Replicate, FAL)
+  - `"payments"` — payment processing (Stripe, LemonSqueezy, Paddle)
+  - `"monitoring"` — observability/analytics (Sentry, PostHog, Datadog)
+  - `"other"` — anything that doesn't fit the above categories
+- `source` — where this technology was detected (e.g., `"package.json"`, `"tailwind.config.ts"`, `"prisma/schema.prisma"`)
+- `confidence` — `"high"` | `"medium"` | `"low"`
+
+### Category ordering
+
+When rendering, display categories in this order: language, framework, styling, database, auth, api, testing, deployment, ai, payments, monitoring, other.
+
+### Detection guidance
+
+- **High confidence**: explicit dependency in `package.json`, dedicated config file exists (e.g., `tailwind.config.ts`, `prisma/schema.prisma`)
+- **Medium confidence**: inferred from imports or code patterns but no config file (e.g., CSS Modules detected from `*.module.css` files)
+- **Low confidence**: indirect evidence only (e.g., environment variable names suggesting a service)
 
 ## `codeHealth`
 

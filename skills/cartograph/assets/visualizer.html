@@ -1734,6 +1734,84 @@
         border-color: var(--accent);
       }
 
+      /* -- Tech Stack -- */
+      .techstack-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 32px;
+      }
+      .techstack-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        max-width: 960px;
+      }
+      .techstack-category-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 12px;
+        text-transform: capitalize;
+      }
+      .techstack-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 10px;
+      }
+      .techstack-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .techstack-card:hover {
+        border-color: var(--border-hover);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .techstack-card-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .techstack-card-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.3;
+      }
+      .techstack-card-version {
+        display: inline-block;
+        margin-left: 6px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 400;
+      }
+      .techstack-card-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+      .techstack-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        font-size: 11px;
+        font-family: var(--mono);
+        color: var(--text-dim);
+      }
+      .techstack-empty {
+        color: var(--text-muted);
+        font-size: 14px;
+        padding: 40px 0;
+        text-align: center;
+      }
+
       /* -- File Tree -- */
       .filetree-tree-item {
         padding: 4px 8px 4px calc(8px + var(--depth, 0) * 16px);
@@ -2365,6 +2443,7 @@
         <div class="tab-cluster" data-group="eng">
           <span class="tab-group-label" aria-hidden="true">Eng</span>
           <div class="tab-cluster-items">
+            <div class="tab" data-tab="techstack">Tech Stack</div>
             <div class="tab" data-tab="featuremap">Feature Map</div>
             <div class="tab" data-tab="datamodel">Data Model</div>
             <div class="tab" data-tab="codeorg">Code Organization</div>
@@ -2454,6 +2533,13 @@
                 <div class="filetree-empty-state">
                   No file tree data. Re-run cartograph to generate.
                 </div>
+              </div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div class="panel" id="techstack-panel" style="flex-direction: row">
+              <div class="techstack-content" id="techstack-content">
+                <div class="techstack-empty">No tech stack data. Re-run cartograph to generate.</div>
               </div>
             </div>
 
@@ -2554,6 +2640,7 @@
       let engHealthHoveredFindingKey = null;
       let engHealthActiveFindingKey = null;
       const ENG_TABS = new Set([
+        "techstack",
         "featuremap",
         "datamodel",
         "codeorg",
@@ -2564,12 +2651,13 @@
         surfaces: "surfaces-panel",
         features: "features-panel",
         flows: "flows-panel",
+        techstack: "techstack-panel",
         featuremap: "filetree-panel",
         datamodel: "entities-panel",
         codeorg: "codemap-panel",
         codehealth: "codehealth-panel",
       };
-      const NO_SIDEBAR_TABS = new Set(["overview", "codehealth"]);
+      const NO_SIDEBAR_TABS = new Set(["overview", "techstack", "codehealth"]);
       const DEAD_CODE_KIND_ORDER = [
         "dead-file",
         "test-only-file",
@@ -2587,6 +2675,13 @@
 
       // -- Computed: entity -> surface mapping --
       let entitySurfaceMap = {}; // entityId -> [surfaceId, ...]
+
+      function esc(str) {
+        if (!str) return "";
+        const d = document.createElement("div");
+        d.textContent = str;
+        return d.innerHTML;
+      }
 
       function getCodeHealthMetrics() {
         return DATA && DATA.codeHealth && Array.isArray(DATA.codeHealth.metrics)
@@ -3331,6 +3426,30 @@
           : ""
       }
 
+      ${
+        (DATA.techStack || []).length
+          ? `
+        <section>
+          <div class="overview-health-strip">
+            <div class="overview-health-metrics">
+              ${(DATA.techStack || [])
+                .filter((t) => ["framework", "language", "styling", "database"].includes(t.category))
+                .map(
+                  (t) => `
+                <div class="overview-health-metric" onclick="switchTab('techstack')">
+                  <span>${esc(t.name)}${t.version ? " " + esc(t.version) : ""}</span>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+            <div class="overview-health-link" onclick="switchTab('techstack')">All ${(DATA.techStack || []).length} →</div>
+          </div>
+        </section>
+      `
+          : ""
+      }
+
       <section>
         <div class="overview-section-title">Surfaces</div>
         <div class="overview-surface-grid">
@@ -3401,6 +3520,63 @@
       </section>
     </div>
   `;
+      }
+
+      const TECH_STACK_CATEGORY_ORDER = [
+        "language", "framework", "styling", "database", "auth", "api",
+        "testing", "deployment", "ai", "payments", "monitoring", "other",
+      ];
+
+      function renderTechStack() {
+        const container = document.getElementById("techstack-content");
+        if (!container) return;
+
+        const items = DATA.techStack || [];
+        if (!items.length) {
+          container.innerHTML = '<div class="techstack-empty">No tech stack data. Re-run cartograph to generate.</div>';
+          return;
+        }
+
+        // Group by category
+        const grouped = {};
+        items.forEach((item) => {
+          const cat = item.category || "other";
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(item);
+        });
+
+        // Sort categories by defined order
+        const orderedCategories = TECH_STACK_CATEGORY_ORDER
+          .filter((cat) => grouped[cat] && grouped[cat].length)
+          .concat(
+            Object.keys(grouped).filter((cat) => !TECH_STACK_CATEGORY_ORDER.includes(cat))
+          );
+
+        container.innerHTML = `
+          <div class="techstack-stack">
+            ${orderedCategories.map((cat) => `
+              <section>
+                <div class="techstack-category-title">${cat}</div>
+                <div class="techstack-grid">
+                  ${grouped[cat].map((item) => `
+                    <div class="techstack-card">
+                      <div class="techstack-card-body">
+                        <div class="techstack-card-name">
+                          ${esc(item.name)}${item.version ? `<span class="techstack-card-version">v${esc(item.version)}</span>` : ""}
+                        </div>
+                        ${item.description ? `<div class="techstack-card-desc">${esc(item.description)}</div>` : ""}
+                        <div class="techstack-card-meta">
+                          <span>${esc(item.source || "")}</span>
+                          ${item.confidence ? `<span class="detail-tag badge-${item.confidence === "high" ? "system" : item.confidence === "medium" ? "admin" : "user"}">${item.confidence}</span>` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  `).join("")}
+                </div>
+              </section>
+            `).join("")}
+          </div>
+        `;
       }
 
       function renderCodeHealthSidebar() {
@@ -3818,6 +3994,7 @@
         panel.style.display = "flex";
         renderSidebar();
         if (tab === "overview") renderOverview();
+        if (tab === "techstack") renderTechStack();
         if (tab === "datamodel") renderEntityMap();
         if (tab === "codeorg") renderCodemapView();
         if (tab === "featuremap") renderFileTreeContent();
@@ -6547,6 +6724,7 @@ In Cartograph, a **compartment** is a logical grouping of related files that for
           if (!DATA.features) DATA.features = [];
           if (!DATA.compartments) DATA.compartments = [];
           if (!DATA.fileTree) DATA.fileTree = [];
+          if (!DATA.techStack) DATA.techStack = [];
           document.getElementById("drop-zone-error").style.display = "none";
           document.body.classList.add("has-data");
           init();

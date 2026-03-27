@@ -2,7 +2,7 @@
 name: cartograph
 description: >
   Map any TypeScript/JS web app codebase into a structured vocabulary of surfaces,
-  features, entities, relationships, operations, flows, and compartments. Surfaces are
+  features, entities, relationships, operations, flows, compartments, and tech stack. Surfaces are
   entry points (pages/routes); features are standalone capabilities embedded across
   surfaces (e.g., "Prompt Wizard", "Star Credits", "Content Unlock"); compartments are
   logical groupings of related code files that bridge product concepts to the underlying
@@ -16,7 +16,7 @@ description: >
 
 # Cartograph
 
-Extract a structural map of any TypeScript/JS web app: surfaces, features, entities, relationships, operations, flows, and compartments. Four orthogonal axes — surfaces are where you go (pages/entry points), features are what you can do (standalone capabilities), entities are what the app works with (data), and compartments are how the code is organized (logical file groupings that bridge product concepts to the underlying codebase).
+Extract a structural map of any TypeScript/JS web app: surfaces, features, entities, relationships, operations, flows, compartments, and tech stack. Four orthogonal axes — surfaces are where you go (pages/entry points), features are what you can do (standalone capabilities), entities are what the app works with (data), and compartments are how the code is organized (logical file groupings that bridge product concepts to the underlying codebase). The tech stack provides a comprehensive inventory of all technologies, frameworks, and libraries the project uses.
 
 ## Workflow
 
@@ -36,7 +36,20 @@ Run this yourself (no agent needed — it's fast and every later agent needs the
    - Components: `components/**/*.{tsx,jsx}`
    - Lib/services: `lib/**/*.{ts,js}`, `services/**/*.{ts,js}`
 3. Read the directory tree to understand the overall shape
-4. Collect the full file inventory (all non-generated files). This is the "discover bundle" — pass it to every agent in later waves.
+4. **Detect the tech stack** — scan `package.json` (dependencies + devDependencies), config files, and project structure to identify all technologies in use. For each detected technology, record:
+   - **Name and version**: from `package.json` dependency entries
+   - **Category**: language, framework, styling, database, auth, api, testing, deployment, ai, payments, monitoring, or other (see `references/json-schema.md` for the full category list)
+   - **Source**: where the technology was detected (e.g., `"package.json"`, `"tailwind.config.ts"`)
+   - **Confidence**: high (explicit dependency + config file), medium (dependency only), low (inferred from patterns)
+
+   Detection signals:
+   - `package.json` dependencies and devDependencies (primary source — extract version numbers)
+   - Config files: `tsconfig.json` (TypeScript), `tailwind.config.*` (Tailwind), `prisma/schema.prisma` (Prisma), `next.config.*` (Next.js), `drizzle.config.*` (Drizzle), `.env*` files (service integrations), `jest.config.*` / `vitest.config.*` (testing), `playwright.config.*` (E2E testing), `Dockerfile` / `docker-compose.*` (Docker), `vercel.json` (Vercel), `sentry.*.config.*` (Sentry)
+   - File patterns: `*.module.css` (CSS Modules), `*.scss` / `*.sass` (Sass), `*.graphql` / `*.gql` (GraphQL)
+   - Import patterns in code: `@clerk/*`, `@auth/*`, `@stripe/*`, `openai`, `@anthropic-ai/*`, etc.
+
+   Return the tech stack as a JSON array conforming to the `techStack[]` schema in `references/json-schema.md`.
+5. Collect the full file inventory (all non-generated files). This is the "discover bundle" — pass it to every agent in later waves along with the detected tech stack.
 
 ---
 
@@ -328,13 +341,14 @@ Run this yourself (no agent needed). Merge all agent outputs into the final JSON
 2. Take the features array and populate:
    - `compartmentIds`: from the Wave 4 mapping
    - Set `"files": []` (empty array — `compartmentIds` is the primary code-mapping mechanism; `files` is kept for backwards compatibility)
-3. Include the `fileTree` array from Agent 7 as-is (no transformation needed)
-4. Add a top-level `codeHealth` object:
+3. Include the `techStack` array from Wave 0 as-is (no transformation needed)
+4. Include the `fileTree` array from Agent 7 as-is (no transformation needed)
+5. Add a top-level `codeHealth` object:
    - `codeHealth.analyzedAt = ISO timestamp`
    - `codeHealth.metrics = [coLocationMetric, drynessMetric, deadCodeMetric]`
-5. Assemble the final JSON following the schema in `references/json-schema.md`
-6. Write `cartograph.json` to the repo root
-7. Tell the user: "Open the visualizer (`assets/visualizer.html` in this skill's directory) in your browser and load `cartograph.json` via the file picker."
+6. Assemble the final JSON following the schema in `references/json-schema.md`
+7. Write `cartograph.json` to the repo root
+8. Tell the user: "Open the visualizer (`assets/visualizer.html` in this skill's directory) in your browser and load `cartograph.json` via the file picker."
 
 ## Important
 
