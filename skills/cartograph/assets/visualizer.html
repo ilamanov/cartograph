@@ -2929,12 +2929,23 @@
         renderInvariantsTab();
       }
 
+      function getInvariantPrompt(result) {
+        if (result.status === "fail" && result.fixPrompt) return result.fixPrompt;
+        return result.verificationPrompt || null;
+      }
+
+      function getInvariantPromptLabel(result) {
+        if (result.status === "fail" && result.fixPrompt) return "Fix Prompt";
+        return "Verification Prompt";
+      }
+
       function copyInvariantPrompt(id) {
         const inv = getInvariantsData();
         if (!inv) return;
         const result = inv.results.find(r => r.id === id);
-        if (result && result.verificationPrompt) {
-          navigator.clipboard.writeText(result.verificationPrompt).then(() => {
+        const prompt = result ? getInvariantPrompt(result) : null;
+        if (prompt) {
+          navigator.clipboard.writeText(prompt).then(() => {
             const btn = document.querySelector(`[data-copy-invariant="${id}"]`);
             if (btn) {
               btn.textContent = "Copied!";
@@ -4320,11 +4331,11 @@
             ` : ""}
             ${surfaceLinks}
             ${featureLinks}
-            ${result.verificationPrompt ? `
+            ${getInvariantPrompt(result) ? `
               <div class="invariants-detail-section">
-                <div class="invariants-detail-section-title">Verification Prompt</div>
+                <div class="invariants-detail-section-title">${getInvariantPromptLabel(result)}</div>
                 <div class="invariants-prompt-block">
-                  <button class="invariants-copy-btn" data-copy-invariant="${result.id}" onclick="event.stopPropagation(); copyInvariantPrompt('${result.id}')">Copy</button>${esc(result.verificationPrompt)}</div>
+                  <button class="invariants-copy-btn" data-copy-invariant="${result.id}" onclick="event.stopPropagation(); copyInvariantPrompt('${result.id}')">Copy</button>${esc(getInvariantPrompt(result))}</div>
               </div>
             ` : ""}
           </div>

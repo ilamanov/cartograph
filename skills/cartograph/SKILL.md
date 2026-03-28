@@ -389,10 +389,11 @@ The agent should:
    - Follow the **Verification steps** section as a guide
    - Read the files listed in **Known scope** and any additional files the steps reference
    - Evaluate whether the **Pass criteria** hold
-   - If passing: record the checked files and an empty violations array
-   - If failing: record specific violations with file paths, line numbers, what was expected, what was found, and a suggestion
-6. Compute the summary counts (total, passing, failing, skipped)
-7. Set `verifiedAt` to the current ISO 8601 timestamp and `definitionsFile` to `"cartograph-invariants.md"`
+   - If passing: record the checked files, an empty violations array, and set `fixPrompt` to `null`
+   - If failing: record specific violations with file paths, line numbers, what was expected, what was found, and a suggestion. Generate a `fixPrompt` — a self-contained prompt that an AI agent can use to fix the specific violations (include the invariant name, the violation details, affected file paths and line numbers, and what needs to change). Set `verificationPrompt` to the re-verification prompt from the definition.
+6. For every result (passing or failing), include the `verificationPrompt` from the invariant definition's **Verification prompt** section
+7. Compute the summary counts (total, passing, failing, skipped)
+8. Set `verifiedAt` to the current ISO 8601 timestamp and `definitionsFile` to `"cartograph-invariants.md"`
 
 Return: the `invariants` object matching the schema in `references/json-schema.md`, or `null` if no definitions file exists.
 

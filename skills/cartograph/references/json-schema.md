@@ -373,7 +373,8 @@ Invariant definitions live in a separate file (`cartograph-invariants.md`) at th
         ],
         "violations": []
       },
-      "verificationPrompt": "Read the file cartograph-invariants.md and verify the invariant 'credits-refunded-on-failure'. Check all server actions in app/chat/*/actions/ and app/create/actions/ that call AI generation APIs. Verify each has error handling that calls a credit refund function. Report pass/fail with evidence."
+      "verificationPrompt": "Read the file cartograph-invariants.md and verify the invariant 'credits-refunded-on-failure'. Check all server actions in app/chat/*/actions/ and app/create/actions/ that call AI generation APIs. Verify each has error handling that calls a credit refund function. Report pass/fail with evidence.",
+      "fixPrompt": null
     }
   ]
 }
@@ -408,7 +409,8 @@ Invariant definitions live in a separate file (`cartograph-invariants.md`) at th
 | `evidence.violations[].expected` | string | What should have been true |
 | `evidence.violations[].found` | string | What was actually found |
 | `evidence.violations[].suggestion` | string | Concrete recommendation for fixing the violation |
-| `verificationPrompt` | string \| null | Copy-pasteable prompt for external automation. Null for skipped. |
+| `verificationPrompt` | string \| null | Copy-pasteable prompt to re-verify this invariant. Shown in the visualizer when the invariant is passing. Null for skipped. |
+| `fixPrompt` | string \| null | Copy-pasteable prompt to fix the failing invariant. Includes specific violation details and file paths so an agent can act on it immediately. Shown in the visualizer when the invariant is failing. Null for passing or skipped. |
 
 ### Example: failing result
 
@@ -438,7 +440,8 @@ Invariant definitions live in a separate file (`cartograph-invariants.md`) at th
       }
     ]
   },
-  "verificationPrompt": "Verify the invariant 'thumbnail-aspect-ratios'. Check all thumbnail generation code in app/media/ and lib/media/. For each thumbnail generation path, verify that the output aspect ratio matches the source media's aspect ratio. Report pass/fail with evidence."
+  "verificationPrompt": "Verify the invariant 'thumbnail-aspect-ratios'. Check all thumbnail generation code in app/media/ and lib/media/. For each thumbnail generation path, verify that the output aspect ratio matches the source media's aspect ratio. Report pass/fail with evidence.",
+  "fixPrompt": "Read the invariant 'thumbnail-aspect-ratios' in cartograph-invariants.md. The invariant is currently failing. Fix the violation in lib/media/resize.ts at line 45: the thumbnail generation uses a hardcoded 1:1 center crop for all thumbnails regardless of source aspect ratio. Update the resize logic to use source media dimensions to calculate the thumbnail crop area, preserving the original aspect ratio. After fixing, verify the invariant holds by checking all thumbnail generation paths."
 }
 ```
 
@@ -455,7 +458,8 @@ Invariant definitions live in a separate file (`cartograph-invariants.md`) at th
   "surfaceIds": [],
   "featureIds": [],
   "evidence": null,
-  "verificationPrompt": null
+  "verificationPrompt": null,
+  "fixPrompt": null
 }
 ```
 
