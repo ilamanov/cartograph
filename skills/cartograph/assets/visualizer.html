@@ -2970,10 +2970,10 @@
         const statusOrder = { fail: 0, pass: 1, skipped: 2 };
         return [...inv.results].sort((a, b) => {
           const statusDiff =
-            (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9);
+            (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
           if (statusDiff !== 0) return statusDiff;
           return (
-            (severityOrder[a.severity] || 9) - (severityOrder[b.severity] || 9)
+            (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9)
           );
         });
       }
